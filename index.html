@@ -1,0 +1,173 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>SewaCheck — Malaysian tenancy agreement checker + on-chain proof</title>
+  <meta name="description" content="Paste or upload a Malaysian residential tenancy agreement. SewaCheck flags unfair or risky clauses with plain-English explanations, Malaysian legal sources and fairer wording, then anchors the agreement's SHA-256 fingerprint on Ethereum Sepolia as tamper-proof proof of the agreed version." />
+  <meta name="theme-color" content="#0f3d3e" />
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%230f3d3e'/%3E%3Cpath d='M18 34l9 9 19-21' stroke='%23f2c14e' stroke-width='7' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E" />
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+  <header class="top">
+    <div class="wrap top-inner">
+      <div class="brand">
+        <span class="logo" aria-hidden="true">✓</span>
+        <div>
+          <h1>SewaCheck</h1>
+          <p class="tag">Check your tenancy agreement. Prove the version you signed.</p>
+        </div>
+      </div>
+      <nav class="steps" aria-label="Steps">
+        <a href="#check">1 · Check</a>
+        <a href="#proof">2 · Fingerprint</a>
+        <a href="#verify">3 · Verify</a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="wrap">
+    <aside class="notice" role="note">
+      <strong>Not legal advice.</strong> SewaCheck is a screening tool for Malaysian residential tenancies. It uses transparent rules based on the Contracts Act 1950, Specific Relief Act 1950, Distress Act 1951, Civil Law Act 1956, Stamp Act 1949 and common market practice.
+      <span class="rta">As of Oct 2026 the <b>Residential Tenancy Act is still a draft Bill</b> — not tabled or in force — so your agreement plus general law is what counts. <a href="#sources">Sources</a></span>
+    </aside>
+
+    <!-- STEP 1 -->
+    <section id="check" class="card">
+      <h2><span class="num">1</span> Check the agreement <small class="bm">Semak perjanjian</small></h2>
+      <p class="muted">Paste text, upload a <b>.txt</b> or <b>.pdf</b>, or try a sample. Everything runs on your phone — nothing is uploaded.</p>
+
+      <div class="samples" id="samples" aria-label="Sample agreements"></div>
+
+      <label for="agreement" class="sr-only">Agreement text</label>
+      <textarea id="agreement" rows="10" placeholder="Paste your tenancy agreement here…" spellcheck="false"></textarea>
+
+      <div class="row">
+        <label class="btn ghost file">
+          <input type="file" id="file" accept=".txt,.pdf,text/plain,application/pdf" />
+          📄 Upload .txt / .pdf
+        </label>
+        <button class="btn ghost" id="clearBtn" type="button">Clear</button>
+        <span class="muted small" id="fileStatus" aria-live="polite"></span>
+      </div>
+      <button class="btn primary big" id="analyzeBtn" type="button">Check clauses</button>
+
+      <div id="results" class="results" hidden>
+        <div class="summary">
+          <div class="score" id="scoreRing" aria-label="Fairness score">
+            <span id="scoreNum">–</span><small>/100</small>
+          </div>
+          <div class="summary-text">
+            <div class="grade">Grade <b id="grade">–</b></div>
+            <div id="verdict" class="verdict"></div>
+            <div class="chips" id="countChips"></div>
+          </div>
+        </div>
+        <div class="facts" id="facts"></div>
+
+        <div class="filter" role="group" aria-label="Filter by severity">
+          <button class="chip on" data-filter="all" type="button">All</button>
+          <button class="chip" data-filter="high" type="button">High</button>
+          <button class="chip" data-filter="medium" type="button">Medium</button>
+          <button class="chip" data-filter="low" type="button">Low</button>
+        </div>
+        <ol id="findings" class="findings"></ol>
+
+        <details class="good" id="goodWrap">
+          <summary>✅ Good signs found <span id="goodCount"></span></summary>
+          <ul id="positives"></ul>
+        </details>
+
+        <div class="row">
+          <button class="btn ghost" id="copyReport" type="button">Copy report</button>
+          <button class="btn ghost" id="downloadReport" type="button">Download report</button>
+          <a class="btn primary" href="#proof">Next: fingerprint →</a>
+        </div>
+      </div>
+
+      <details class="ai" id="aiBox">
+        <summary>🤖 Optional: AI plain-language explain (bring your own key)</summary>
+        <p class="muted small">Off by default. The rule engine above needs no key. If you paste your own OpenAI-compatible API key, an "Explain with AI" button appears on each flag. The key stays in this tab's memory only — never saved, never sent to us.</p>
+        <label>API key <input type="password" id="aiKey" autocomplete="off" placeholder="sk-…" /></label>
+        <label>Model <input type="text" id="aiModel" value="gpt-4o-mini" /></label>
+        <label>Base URL <input type="url" id="aiBase" value="https://api.openai.com/v1" /></label>
+        <label class="inline"><input type="checkbox" id="aiBm" /> Answer in Bahasa Malaysia</label>
+        <div class="row">
+          <button class="btn ghost" id="aiSave" type="button">Enable</button>
+          <button class="btn ghost" id="aiForget" type="button">Forget key</button>
+          <span class="muted small" id="aiStatus"></span>
+        </div>
+      </details>
+    </section>
+
+    <!-- STEP 2 -->
+    <section id="proof" class="card">
+      <h2><span class="num">2</span> Fingerprint &amp; anchor <small class="bm">Cap jari &amp; rekod</small></h2>
+      <p class="muted">Once both sides agree on the final text, SewaCheck computes its <b>SHA-256 fingerprint</b> on your phone. Change one comma and the fingerprint changes completely. Anchoring the fingerprint on Ethereum gives a public, timestamped proof of <i>which version</i> was agreed — without putting the agreement itself on-chain.</p>
+
+      <div class="hashbox">
+        <div class="muted small">Fingerprint (SHA-256 of normalised text)</div>
+        <code id="hash">—</code>
+        <div class="muted small" id="hashMeta"></div>
+        <button class="btn ghost small" id="copyHash" type="button">Copy fingerprint</button>
+      </div>
+
+      <div id="chainMode" class="mode"></div>
+
+      <label for="label">Short label (optional, public — no names or IC numbers)</label>
+      <input type="text" id="label" maxlength="64" placeholder="e.g. TA unit B-12-3 v2 Nov-2026" />
+      <div class="muted small" id="labelBytes">0 / 64 bytes</div>
+
+      <div class="row">
+        <button class="btn primary" id="anchorBtn" type="button">Anchor on Sepolia</button>
+        <button class="btn ghost" id="ackBtn" type="button" hidden>Acknowledge as other party</button>
+        <a class="btn ghost" id="mmLink" hidden>Open in MetaMask app</a>
+      </div>
+      <div id="anchorStatus" class="status" aria-live="polite"></div>
+    </section>
+
+    <!-- STEP 3 -->
+    <section id="verify" class="card">
+      <h2><span class="num">3</span> Verify a copy <small class="bm">Sahkan salinan</small></h2>
+      <p class="muted">Months later, someone hands you "the agreement". Paste it in step 1 (or keep the current text) and check it against the chain. No wallet needed.</p>
+      <label for="txHash">Transaction hash (for self-transaction anchors, or any anchor tx)</label>
+      <input type="text" id="txHash" placeholder="0x…" autocomplete="off" spellcheck="false" />
+      <div class="row">
+        <button class="btn primary" id="verifyTxBtn" type="button">Verify by tx hash</button>
+        <button class="btn ghost" id="verifyRegBtn" type="button">Look up in registry</button>
+      </div>
+      <div id="verifyStatus" class="status" aria-live="polite"></div>
+    </section>
+
+    <section id="sources" class="card">
+      <h2>Legal sources used <small class="bm">Sumber undang-undang</small></h2>
+      <p class="muted small">Statutes link to the official text (Laws of Malaysia via AGC / section readers). "Practice" items describe common market practice, not law.</p>
+      <ul id="sourceList" class="sources"></ul>
+    </section>
+  </main>
+
+  <footer class="wrap foot">
+    <p>SewaCheck · open source (MIT) · built for BLI Legal Tech Hackathon 2 · Screening aid only — not legal advice. For disputes up to RM5,000 the Magistrates' Court small-claims procedure needs no lawyer.</p>
+  </footer>
+
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+
+  <!-- Core (no network needed) -->
+  <script src="js/config.js"></script>
+  <script src="js/sources.js"></script>
+  <script src="js/rules.js"></script>
+  <script src="js/fingerprint.js"></script>
+  <script src="js/samples-data.js"></script>
+  <script src="js/ai.js"></script>
+  <!-- CDN libraries (pinned versions + Subresource Integrity) -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/6.13.4/ethers.umd.min.js"
+          integrity="sha384-6Zl0Pc8zjSz8KvmNeXRvUQgY4ryFb+BwDvKCmLYcBME0joAaru491tQgi9B7zsMM"
+          crossorigin="anonymous" referrerpolicy="no-referrer" defer></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"
+          integrity="sha384-/1qUCSGwTur9vjf/z9lmu/eCUYbpOTgSjmpbMQZ1/CtX2v/WcAIKqRv+U1DUCG6e"
+          crossorigin="anonymous" referrerpolicy="no-referrer" defer></script>
+  <script src="js/chain.js" defer></script>
+  <script src="js/app.js" defer></script>
+</body>
+</html>

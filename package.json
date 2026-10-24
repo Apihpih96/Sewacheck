@@ -1,0 +1,19 @@
+{
+  "name": "sewacheck",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Malaysian tenancy agreement checker with on-chain SHA-256 proof of the agreed version.",
+  "license": "MIT",
+  "scripts": {
+    "test": "node --test scripts/test.js",
+    "build:samples": "node scripts/build-samples.js",
+    "smoke": "node scripts/smoke-dom.js",
+    "smoke:network": "SMOKE_NETWORK=1 node scripts/smoke-dom.js",
+    "e2e": "node scripts/e2e-anvil.js",
+    "serve": "python3 -m http.server 8000"
+  },
+  "devDependencies": {
+    "ethers": "6.13.4",
+    "jsdom": "^24.1.3"
+  }
+}
