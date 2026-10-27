@@ -9,7 +9,7 @@ SewaCheck is a free, phone-first web app that reads a Malaysian residential tena
 
 - **Live demo:** `https://<your-github-username>.github.io/<repo-name>/` *(fill in after enabling GitHub Pages)*
 - **Contract:** `AgreementRegistry` on Sepolia — *not yet deployed* (the app works without it; see [On-chain proof](#on-chain-proof))
-- **Demo video:** *(link after recording — see [DEMO_SCRIPT.md](DEMO_SCRIPT.md))*
+- **Demo video:** https://youtu.be/g38F9D_IADc
 
 ---
 
